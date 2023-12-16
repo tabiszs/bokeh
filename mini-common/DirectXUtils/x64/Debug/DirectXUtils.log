@@ -1,0 +1,23 @@
+﻿  compilation header save succeeded; see C:\Users\admin\source\repos\PiotrRogulski\GK2_Lab5\shadery\mini-common\DirectXUtils\spritePS.h
+  compilation header save succeeded; see C:\Users\admin\source\repos\PiotrRogulski\GK2_Lab5\shadery\mini-common\DirectXUtils\spriteVS.h
+  camera.cpp
+  constantBuffer.cpp
+  DDSTextureLoader.cpp
+  dxApplication.cpp
+  dxDevice.cpp
+  dxSwapChain.cpp
+  effect.cpp
+  exceptions.cpp
+  inputLayoutManager.cpp
+  material.cpp
+  mesh.cpp
+  inputElements.cpp
+  model.cpp
+  spriteRenderer.cpp
+  vertexDef.cpp
+  viewFrustrum.cpp
+  window.cpp
+  windowApplication.cpp
+  WICTextureLoader.cpp
+  Generating Code...
+  DirectXUtils.vcxproj -> C:\Users\admin\source\repos\PiotrRogulski\GK2_Lab5\shadery\gk-lab3\x64\Debug\DirectXUtils.lib
