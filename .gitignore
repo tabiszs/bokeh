@@ -24,9 +24,14 @@
 *.lai
 *.la
 *.a
-*.lib
 
 # Executables
 *.exe
 *.out
 *.app
+
+.vs
+
+DirectXUtils.idb
+DirectXUtils.pdb
+DirectXUtils.lib
