@@ -68,8 +68,13 @@ BokehDemo::BokehDemo(HINSTANCE hInst): BokehDemoBase(hInst) {
     m_variables.AddGuiVariable("lightPos", lightPos, -10, 10);
     m_variables.AddGuiVariable("lightColor", lightColor, 0, 100, 1);
 
+    // variables // BOKEH
+    constexpr float angle = 0.0f;
+    constexpr float coc_factor = 1.0f;
     constexpr float NUM_SAMPLES = 16.0f;
     m_variables.AddGuiVariable("NUM_SAMPLES", NUM_SAMPLES, 1, 16, 1);
+    m_variables.AddGuiVariable("coc_factor", coc_factor, 0.8f, 1.2f);
+    m_variables.AddGuiVariable("angle", angle, -XM_PI, XM_PI, 0.1f);
 
     SIZE screenSize = get_window().client_size();
     m_variables.AddRenderableTexture(m_device, "sceneTexture", screenSize);

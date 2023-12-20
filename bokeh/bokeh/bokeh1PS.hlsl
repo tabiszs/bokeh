@@ -1,14 +1,13 @@
 static const float PI = 3.14159265322f; 
 //static const int NUM_SAMPLES = 16; // static keyword is required
 
+float angle;
+float coc_factor;
 float NUM_SAMPLES;
 sampler blurSampler;
 texture2D sceneTexture;
 texture2D verticalBlurTexture;
 texture2D diagonalBlurTexture;
-
-float coc;
-float angle;
 
 
 struct PSInput
@@ -50,14 +49,14 @@ PSOUTPUT main(PSInput i) : SV_TARGET
     
     // Get the local CoC to determine the radius of the blur.
     // tu mozna zdefiniowac poziom bluru w zaleznosci od odleglosci z
-    float coc = sceneTexture.Sample(blurSampler, i.tex).a;
+    float coc = coc_factor * sceneTexture.Sample(blurSampler, i.tex).a;
     
     // CoC-weighted vertical blur.
-    float2 blurDir = coc * invViewDimensions * float2(cos(PI / 2), sin(PI / 2));
+    float2 blurDir = coc * invViewDimensions * float2(cos(angle + PI / 2), sin(angle + PI / 2));
     float4 color = BlurTexture(sceneTexture, i.tex, blurDir) * coc;
 
     // CoC-weighted diagonal blur.
-    float2 blurDir2 = coc * invViewDimensions * float2(cos(-PI / 6), sin(-PI / 6));
+    float2 blurDir2 = coc * invViewDimensions * float2(cos(angle + -PI / 6), sin(angle + -PI / 6));
     float4 color2 = BlurTexture(sceneTexture, i.tex, blurDir2) * coc;
 
     // Output to MRT - multi render target

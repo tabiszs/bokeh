@@ -1,14 +1,13 @@
 static const float PI = 3.14159265322f;
 //static const int NUM_SAMPLES = 16; // static keyword is required
 
+float angle;
+float coc_factor;
 float NUM_SAMPLES;
 sampler blurSampler;
 texture2D sceneTexture;
 texture2D verticalBlurTexture;
 texture2D diagonalBlurTexture;
-
-float coc;
-float angle;
 
 
 struct PSInput
@@ -43,15 +42,15 @@ float4 main(PSInput i) : SV_TARGET
     float2 invViewDimensions = float2(1.0f / viewWidth, 1.0f / viewHeight);
        
     // Get the center to determine the radius of the blur
-    float coc = verticalBlurTexture.Sample(blurSampler, i.tex).a;
-    float coc2 = diagonalBlurTexture.Sample(blurSampler, i.tex).a;
+    float coc = coc_factor * verticalBlurTexture.Sample(blurSampler, i.tex).a;
+    float coc2 = coc_factor * diagonalBlurTexture.Sample(blurSampler, i.tex).a;
 
     // Sample the vertical blur (1st MRT) texture with this new blur direction
-    float2 blurDir = coc * invViewDimensions * float2(cos(-PI / 6), sin(-PI / 6));
+    float2 blurDir = coc * invViewDimensions * float2(cos(angle + -PI / 6), sin(angle + -PI / 6));
     float4 color = BlurTexture(verticalBlurTexture, i.tex, blurDir) * coc;
 
     // Sample the diagonal blur (2nd MRT) texture with this new blur direction
-    float2 blurDir2 = coc2 * invViewDimensions * float2(cos(-5 * PI / 6), sin(-5 * PI / 6));
+    float2 blurDir2 = coc2 * invViewDimensions * float2(cos(angle + -5 * PI / 6), sin(angle + -5 * PI / 6));
     float4 color2 = BlurTexture(diagonalBlurTexture, i.tex, blurDir2) * coc2;
 
     // And we're done!
