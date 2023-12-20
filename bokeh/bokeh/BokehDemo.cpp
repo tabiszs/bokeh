@@ -68,8 +68,13 @@ BokehDemo::BokehDemo(HINSTANCE hInst): BokehDemoBase(hInst) {
     m_variables.AddGuiVariable("lightPos", lightPos, -10, 10);
     m_variables.AddGuiVariable("lightColor", lightColor, 0, 100, 1);
 
+    constexpr float NUM_SAMPLES = 16.0f;
+    m_variables.AddGuiVariable("NUM_SAMPLES", NUM_SAMPLES, 1, 16, 1);
+
     SIZE screenSize = get_window().client_size();
-    m_variables.AddRenderableTexture(m_device, "screen", screenSize);
+    m_variables.AddRenderableTexture(m_device, "sceneTexture", screenSize);
+    m_variables.AddRenderableTexture(m_device, "verticalBlurTexture", screenSize);
+    m_variables.AddRenderableTexture(m_device, "diagonalBlurTexture", screenSize);
 
 
     // Samplers
@@ -117,26 +122,30 @@ BokehDemo::BokehDemo(HINSTANCE hInst): BokehDemoBase(hInst) {
 
     //Render Passes
     // teapot
-    const auto passTeapot = addPass(L"teapotVS.cso", L"teapotPS.cso", "screen");
+    const auto passTeapot = addPass(L"teapotVS.cso", L"teapotPS.cso", "sceneTexture");
     addModelToPass(passTeapot, teapot);
 
     // spring
-    const auto passSpring = addPass(L"springVS.cso", L"springPS.cso", "screen");
+    const auto passSpring = addPass(L"springVS.cso", L"springPS.cso", "sceneTexture");
     addModelToPass(passSpring, plane);
 
     // water
-    const auto passWater = addPass(L"waterVS.cso", L"waterPS.cso", "screen");
+    const auto passWater = addPass(L"waterVS.cso", L"waterPS.cso", "sceneTexture");
     addModelToPass(passWater, quad);
     rasterizer_info rs;
     rs.CullMode = D3D11_CULL_NONE;
     addRasterizerState(passWater, rs);
 
     // cube map
-    const auto passEnv = addPass(L"envVS.cso", L"envPS.cso", "screen");
+    const auto passEnv = addPass(L"envVS.cso", L"envPS.cso", "sceneTexture");
     addModelToPass(passEnv, envModel);
     addRasterizerState(passEnv, rasterizer_info(true));
 
     // blur filtering
-    auto passBlurBokeh = addPass(L"fullScreenQuadVS.cso", L"bokehPS.cso", window_target());
-    addModelToPass(passBlurBokeh, quad);
+    auto passBlurBokeh1 = addPass(L"fullScreenQuadVS.cso", L"bokeh1PS.cso", "verticalBlurTexture");
+    addModelToPass(passBlurBokeh1, quad);
+    auto passBlurBokeh2 = addPass(L"fullScreenQuadVS.cso", L"bokeh2PS.cso", "diagonalBlurTexture", true);
+    addModelToPass(passBlurBokeh2, quad);
+    auto passBlurBokeh3 = addPass(L"fullScreenQuadVS.cso", L"bokeh3PS.cso", window_target());
+    addModelToPass(passBlurBokeh3, quad);
 }

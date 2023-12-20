@@ -16,6 +16,8 @@
 *.dylib
 bokeh/*.dll
 mini-common/*.dll
+*.tlog
+*.log
 
 # Fortran module files
 *.mod
