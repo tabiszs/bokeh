@@ -94,11 +94,17 @@
     <FxCompile Include="envVS.hlsl">
       <Filter>Resource Files\Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="waterPS.hlsl" />
-    <FxCompile Include="waterVS.hlsl" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="waterPS.cso" />
-    <None Include="waterVS.cso" />
+    <FxCompile Include="waterVS.hlsl">
+      <Filter>Resource Files\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="waterPS.hlsl">
+      <Filter>Resource Files\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="bokehPS.hlsl">
+      <Filter>Resource Files\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="fullScreenQuadVS.hlsl">
+      <Filter>Resource Files\Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

@@ -14,7 +14,7 @@ auto operator/(const SIZE& s, const float f) -> SIZE {
 }
 
 BokehDemo::BokehDemo(HINSTANCE hInst): BokehDemoBase(hInst) {
-    //Shader Variables
+    // Shader Variables
     m_variables.AddSemanticVariable("modelMtx", VariableSemantic::MatM);
     m_variables.AddSemanticVariable("modelInvTMtx", VariableSemantic::MatMInvT);
     m_variables.AddSemanticVariable("viewProjMtx", VariableSemantic::MatVP);
@@ -68,9 +68,27 @@ BokehDemo::BokehDemo(HINSTANCE hInst): BokehDemoBase(hInst) {
     m_variables.AddGuiVariable("lightPos", lightPos, -10, 10);
     m_variables.AddGuiVariable("lightColor", lightColor, 0, 100, 1);
 
+    SIZE screenSize = get_window().client_size();
+    m_variables.AddRenderableTexture(m_device, "screen", screenSize);
 
-    //Models
 
+    // Samplers
+    sampler_info sDesc;
+    sDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+    sDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+    sDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+    sDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+    m_variables.AddSampler(m_device, "blurSampler", sDesc);
+
+    m_variables.AddSemanticVariable("nearZ", VariableSemantic::FloatNearPlane);
+    m_variables.AddTexture(m_device, "screenColor",
+        tex2d_info(screenSize.cx, screenSize.cy,
+            DXGI_FORMAT_R8G8B8A8_UNORM, 1));
+    m_variables.AddTexture(m_device, "screenDepth",
+        tex2d_info(screenSize.cx, screenSize.cy,
+            DXGI_FORMAT_R24_UNORM_X8_TYPELESS, 1));
+
+    // Models
     const auto teapot = addModelFromFile("models/Teapot.3ds");
     XMFLOAT4X4 teapotMtx{};
     XMStoreFloat4x4(
@@ -98,20 +116,27 @@ BokehDemo::BokehDemo(HINSTANCE hInst): BokehDemoBase(hInst) {
 
 
     //Render Passes
-
-    const auto passTeapot = addPass(L"teapotVS.cso", L"teapotPS.cso");
+    // teapot
+    const auto passTeapot = addPass(L"teapotVS.cso", L"teapotPS.cso", "screen");
     addModelToPass(passTeapot, teapot);
 
-    const auto passSpring = addPass(L"springVS.cso", L"springPS.cso");
+    // spring
+    const auto passSpring = addPass(L"springVS.cso", L"springPS.cso", "screen");
     addModelToPass(passSpring, plane);
 
-    const auto passWater = addPass(L"waterVS.cso", L"waterPS.cso");
+    // water
+    const auto passWater = addPass(L"waterVS.cso", L"waterPS.cso", "screen");
     addModelToPass(passWater, quad);
     rasterizer_info rs;
     rs.CullMode = D3D11_CULL_NONE;
     addRasterizerState(passWater, rs);
 
-    const auto passEnv = addPass(L"envVS.cso", L"envPS.cso");
+    // cube map
+    const auto passEnv = addPass(L"envVS.cso", L"envPS.cso", "screen");
     addModelToPass(passEnv, envModel);
     addRasterizerState(passEnv, rasterizer_info(true));
+
+    // blur filtering
+    auto passBlurBokeh = addPass(L"fullScreenQuadVS.cso", L"bokehPS.cso", window_target());
+    addModelToPass(passBlurBokeh, quad);
 }
