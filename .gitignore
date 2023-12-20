@@ -39,3 +39,6 @@ DirectXUtils.idb
 DirectXUtils.pdb
 DirectXUtils.lib
 /mini-common/DirectXUtils/x64/*
+/mini-common/DirectXUtils/*PS.h
+/mini-common/DirectXUtils/*VS.h
+/mini-common/DirectXUtils/*GS.h
