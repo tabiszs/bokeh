@@ -27,7 +27,7 @@ float4 BlurTexture(texture2D tex, float2 uv, float2 direction)
     float4 finalColor = 0.0f;
     float blurAmount = 0.0f;
  
-    // This offset is important. Will explain later. ;)
+    // Remove Rhombi Overlap
     uv += direction * 0.5f;
  
     for (int i = 0; i < NUM_SAMPLES; ++i)
