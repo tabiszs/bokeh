@@ -73,11 +73,8 @@ BokehDemo::BokehDemo(HINSTANCE hInst): BokehDemoBase(hInst) {
 
     SIZE screenSize = get_window().client_size();
     m_variables.AddRenderableTexture(m_device, "sceneTexture", screenSize);
-    m_variables.AddRenderableTexture(m_device, "verticalBlurTexture", screenSize);
-    m_variables.AddRenderableTexture(m_device, "diagonalBlurTexture", screenSize);
 
-
-    // Samplers
+    // Samplers // BOKEH
     sampler_info sDesc;
     sDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
     sDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
@@ -141,11 +138,23 @@ BokehDemo::BokehDemo(HINSTANCE hInst): BokehDemoBase(hInst) {
     addModelToPass(passEnv, envModel);
     addRasterizerState(passEnv, rasterizer_info(true));
 
-    // blur filtering
-    auto passBlurBokeh1 = addPass(L"fullScreenQuadVS.cso", L"bokeh1PS.cso", "verticalBlurTexture");
+
+    // blur filtering BOKEH
+    // add textures as double render target
+    directx::tex2d_info desc(screenSize.cx, screenSize.cy);
+    desc.BindFlags |= D3D11_BIND_RENDER_TARGET;
+    desc.MipLevels = 1;
+    auto verticalBlurTexture = m_device.CreateTexture(desc);
+    m_variables.AddTexture(m_device, "verticalBlurTexture", verticalBlurTexture);
+    auto diagonalBlurTexture = m_device.CreateTexture(desc);
+    m_variables.AddTexture(m_device, "diagonalBlurTexture", diagonalBlurTexture);
+
+    SIZE s{ static_cast<LONG>(desc.Width), static_cast<LONG>(desc.Height) };
+    auto doubleTextureTarget = RenderTargetsEffect(directx::viewport{ s }, m_device.CreateDepthStencilView(s.cx, s.cy));
+    doubleTextureTarget.SetRenderTargets({ m_device.CreateRenderTargetView(verticalBlurTexture).get(), m_device.CreateRenderTargetView(diagonalBlurTexture).get() });
+
+    auto passBlurBokeh1 = addPass(L"fullScreenQuadVS.cso", L"bokeh1PS.cso", doubleTextureTarget, true);
     addModelToPass(passBlurBokeh1, quad);
-    auto passBlurBokeh2 = addPass(L"fullScreenQuadVS.cso", L"bokeh2PS.cso", "diagonalBlurTexture", true);
+    auto passBlurBokeh2 = addPass(L"fullScreenQuadVS.cso", L"bokeh2PS.cso", window_target());
     addModelToPass(passBlurBokeh2, quad);
-    auto passBlurBokeh3 = addPass(L"fullScreenQuadVS.cso", L"bokeh3PS.cso", window_target());
-    addModelToPass(passBlurBokeh3, quad);
 }

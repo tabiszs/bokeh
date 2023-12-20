@@ -109,8 +109,5 @@
     <FxCompile Include="bokeh2PS.hlsl">
       <Filter>Resource Files\Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="bokeh3PS.hlsl">
-      <Filter>Resource Files\Shaders</Filter>
-    </FxCompile>
   </ItemGroup>
 </Project>

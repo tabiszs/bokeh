@@ -17,6 +17,12 @@ struct PSInput
     float2 tex : TEXCOORD0;
 };
 
+struct PSOUTPUT
+{
+    float4 vertical : COLOR0;
+    float4 diagonal : COLOR1;
+};
+
 float4 BlurTexture(texture2D tex, float2 uv, float2 direction)
 {
     float4 finalColor = 0.0f;
@@ -36,7 +42,7 @@ float4 BlurTexture(texture2D tex, float2 uv, float2 direction)
     return (finalColor / blurAmount);
 }
 
-float4 main(PSInput i) : SV_TARGET
+PSOUTPUT main(PSInput i) : SV_TARGET
 {
     uint viewWidth, viewHeight;
     sceneTexture.GetDimensions(viewWidth, viewHeight);
@@ -45,11 +51,18 @@ float4 main(PSInput i) : SV_TARGET
     // Get the local CoC to determine the radius of the blur.
     // tu mozna zdefiniowac poziom bluru w zaleznosci od odleglosci z
     float coc = sceneTexture.Sample(blurSampler, i.tex).a;
-
+    
     // CoC-weighted vertical blur.
-    float2 blurDirection = coc * invViewDimensions * float2(cos(PI / 2), sin(PI / 2));
-    float3 color = BlurTexture(sceneTexture, i.tex, blurDirection) * coc;
+    float2 blurDir = coc * invViewDimensions * float2(cos(PI / 2), sin(PI / 2));
+    float4 color = BlurTexture(sceneTexture, i.tex, blurDir) * coc;
 
-    // Done!
-    return float4(color, coc);
+    // CoC-weighted diagonal blur.
+    float2 blurDir2 = coc * invViewDimensions * float2(cos(-PI / 6), sin(-PI / 6));
+    float4 color2 = BlurTexture(sceneTexture, i.tex, blurDir2) * coc;
+
+    // Output to MRT - multi render target
+    PSOUTPUT output;
+    output.vertical = float4(color.rgb, coc);
+    output.diagonal = float4(0.5 * (color2.rgb + output.vertical.xyz), coc); 
+    return output;
 }
