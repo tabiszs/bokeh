@@ -38,3 +38,4 @@ mini-common/*.dll
 DirectXUtils.idb
 DirectXUtils.pdb
 DirectXUtils.lib
+/mini-common/DirectXUtils/x64/*
