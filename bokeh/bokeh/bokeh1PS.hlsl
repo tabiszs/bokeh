@@ -27,6 +27,8 @@ float4 BlurTexture(Texture2D tex, float2 uv, const float2 direction) {
     // Remove Rhombi Overlap
     uv += direction * 0.5f;
 
+    const float coc = tex.Sample(blurSampler, uv).a;
+
     for (int i = 0; i < NUM_SAMPLES; ++i) {
         float4 color = tex.Sample(blurSampler, uv + direction * i);
         color *= color.a;
@@ -34,7 +36,7 @@ float4 BlurTexture(Texture2D tex, float2 uv, const float2 direction) {
         finalColor += color;
     }
 
-    return (finalColor / blurAmount);
+    return (finalColor / blurAmount) * coc;
 }
 
 PSOUTPUT main(const PSInput i) : SV_TARGET {
@@ -57,6 +59,6 @@ PSOUTPUT main(const PSInput i) : SV_TARGET {
     // Output to MRT - multi render target
     PSOUTPUT output;
     output.vertical = float4(color.rgb, coc);
-    output.diagonal = float4(0.5 * (color2.rgb + output.vertical.xyz), coc); 
+    output.diagonal = float4(0.5 * (color2.rgb + output.vertical.xyz), coc);
     return output;
 }
