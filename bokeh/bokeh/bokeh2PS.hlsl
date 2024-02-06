@@ -5,55 +5,59 @@ float angle;
 float coc_factor;
 float NUM_SAMPLES;
 sampler blurSampler;
-texture2D sceneTexture;
-texture2D verticalBlurTexture;
-texture2D diagonalBlurTexture;
+Texture2D sceneTexture;
+Texture2D verticalBlurTexture;
+Texture2D diagonalBlurTexture;
 
 
-struct PSInput
-{
+struct PSInput {
     float4 pos : SV_POSITION;
     float2 tex : TEXCOORD0;
 };
 
-float4 BlurTexture(texture2D tex, float2 uv, float2 direction)
-{
+float4 BlurTexture(Texture2D tex, float2 uv, const float2 direction) {
     float4 finalColor = 0.0f;
     float blurAmount = 0.0f;
- 
+
     // Remove Rhombi Overlap
     uv += direction * 0.5f;
- 
-    for (int i = 0; i < NUM_SAMPLES; ++i)
-    {
+
+    const float coc = tex.Sample(blurSampler, uv).a;
+
+    for (int i = 0; i < NUM_SAMPLES; ++i) {
         float4 color = tex.Sample(blurSampler, uv + direction * i);
         color *= color.a;
         blurAmount += color.a;
         finalColor += color;
     }
- 
-    return (finalColor / blurAmount);
+
+    return (finalColor / blurAmount) / coc;
 }
 
-float4 main(PSInput i) : SV_TARGET
-{
+float4 main(const PSInput i) : SV_TARGET {
     uint viewWidth, viewHeight;
     verticalBlurTexture.GetDimensions(viewWidth, viewHeight);
-    float2 invViewDimensions = float2(1.0f / viewWidth, 1.0f / viewHeight);
-       
+    const float2 invViewDimensions = float2(1.0f / viewWidth, 1.0f / viewHeight);
+
     // Get the center to determine the radius of the blur
-    float coc = coc_factor * verticalBlurTexture.Sample(blurSampler, i.tex).a;
-    float coc2 = coc_factor * diagonalBlurTexture.Sample(blurSampler, i.tex).a;
+    float4 centerColor = verticalBlurTexture.Sample(blurSampler, i.tex);
+    float4 centerColor2 = diagonalBlurTexture.Sample(blurSampler, i.tex);
+    const float coc = centerColor.a;
+    const float coc2 = centerColor2.a;
 
-    // Sample the vertical blur (1st MRT) texture with this new blur direction
-    float2 blurDir = coc * invViewDimensions * float2(cos(angle + -PI / 6), sin(angle + -PI / 6));
-    float4 color = BlurTexture(verticalBlurTexture, i.tex, blurDir) * coc;
+    // Compute the blur direction. Here, diagonal.
+    const float2 blurDirection = coc * invViewDimensions * float2(cos(angle - PI / 6), sin(angle - PI / 6));
+    const float2 blurDirection2 = coc2 * invViewDimensions * float2(cos(angle - 5 * PI / 6), sin(angle - 5 * PI / 6));
 
-    // Sample the diagonal blur (2nd MRT) texture with this new blur direction
-    float2 blurDir2 = coc2 * invViewDimensions * float2(cos(angle + -5 * PI / 6), sin(angle + -5 * PI / 6));
-    float4 color2 = BlurTexture(diagonalBlurTexture, i.tex, blurDir2) * coc2;
+    // Blur using the weights to bias it
+    float4 color = BlurTexture(verticalBlurTexture, i.tex, blurDirection) * coc;
+    float4 color2 = BlurTexture(diagonalBlurTexture, i.tex, blurDirection2) * coc2;
 
-    // And we're done!
     float3 output = (color.rgb + color2.rgb) * 0.5f;
+
+    if (coc == 0.0f) {
+        output = sceneTexture.Sample(blurSampler, i.tex).rgb;
+    }
+    
     return float4(output, 1.0f);
 }
