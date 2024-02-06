@@ -20,9 +20,6 @@ BokehDemo::BokehDemo(HINSTANCE hInst): BokehDemoBase(hInst) {
     m_variables.AddSemanticVariable("viewProjMtx", VariableSemantic::MatVP);
     m_variables.AddSemanticVariable("camPos", VariableSemantic::Vec4CamPos);
 
-    // constexpr XMFLOAT4 lightPos[2] = { { -1,0,-1.7F,1 },{ 0,1.7F,0,1 } };
-    // constexpr XMFLOAT3 lightColor[2] = { { 1, 0.8F, 0.9F},{ 0.1F, 0, 1 } };
-
     constexpr XMFLOAT4 lightPos[2] = {
         {-1.0F, 0.0F, -3.5F, 1.0F},
         {0.0F, 3.5F, 0.0F, 1.0F},
@@ -72,11 +69,11 @@ BokehDemo::BokehDemo(HINSTANCE hInst): BokehDemoBase(hInst) {
     constexpr auto angle = 0.0F;
     constexpr auto coc_factor = 1.0F;
     constexpr auto NUM_SAMPLES = 16.0F;
-    m_variables.AddGuiVariable("NUM_SAMPLES", NUM_SAMPLES, 1, 16, 1);
+    m_variables.AddGuiVariable("NUM_SAMPLES", NUM_SAMPLES, 1, 32, 1);
     m_variables.AddGuiVariable("coc_factor", coc_factor, 0.8f, 1.2f);
     m_variables.AddGuiVariable("angle", angle, -XM_PI, XM_PI, 0.1f);
 
-    SIZE screenSize = get_window().client_size();
+    auto screenSize = get_window().client_size();
     m_variables.AddRenderableTexture(m_device, "sceneTexture", screenSize);
 
     // Samplers // BOKEH
@@ -106,6 +103,26 @@ BokehDemo::BokehDemo(HINSTANCE hInst): BokehDemoBase(hInst) {
     );
     model(teapot).applyTransform(teapotMtx);
 
+    const auto skull = addModelFromFile("models/skull.obj");
+    XMFLOAT4X4 skullMtx{};
+    XMStoreFloat4x4(
+        &skullMtx,
+        XMMatrixScaling(0.2F, 0.2F, 0.2F)
+        * XMMatrixRotationX(XM_PIDIV2)
+        * XMMatrixTranslation(2, 1, 6)
+    );
+    model(skull).applyTransform(skullMtx);
+
+    const auto capsule = addModelFromFile("models/capsule.obj");
+    XMFLOAT4X4 capsuleMtx{};
+    XMStoreFloat4x4(
+        &capsuleMtx,
+        XMMatrixScaling(0.1F, 0.1F, 0.1F)
+        * XMMatrixRotationX(XM_PIDIV2)
+        * XMMatrixTranslation(-1, 3, 5)
+    );
+    model(capsule).applyTransform(capsuleMtx);
+
     const auto plane = addModelFromFile("models/Plane.obj");
     XMFLOAT4X4 planeMtx{};
     XMStoreFloat4x4(&planeMtx, XMMatrixTranslation(0, -h0, 0));
@@ -126,6 +143,14 @@ BokehDemo::BokehDemo(HINSTANCE hInst): BokehDemoBase(hInst) {
     // teapot
     const auto passTeapot = addPass(L"teapotVS.cso", L"teapotPS.cso", "sceneTexture");
     addModelToPass(passTeapot, teapot);
+
+    // skull
+    const auto passSkull = addPass(L"skullVS.cso", L"skullPS.cso", "sceneTexture");
+    addModelToPass(passSkull, skull);
+
+    // capsule
+    const auto passCapsule = addPass(L"capsuleVS.cso", L"capsulePS.cso", "sceneTexture");
+    addModelToPass(passCapsule, capsule);
 
     // spring
     const auto passSpring = addPass(L"springVS.cso", L"springPS.cso", "sceneTexture");
