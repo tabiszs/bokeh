@@ -99,5 +99,5 @@ float4 main(const PSInput i) : SV_TARGET {
 
     const float3 finalColor = color + ambient;
     
-    return float4(pow(finalColor / (finalColor + 1), 1 / 2.2), 1);
+    return float4(pow(finalColor / (finalColor + 1), 1 / 2.2), i.pos.z);
 }

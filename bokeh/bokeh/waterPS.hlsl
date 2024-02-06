@@ -47,12 +47,12 @@ float4 main(const PSInput i) : SV_TARGET {
     const float4 refractedColor = envMap.Sample(samp, intersect_ray(i.localPos, refracted));
 
     if (!any(refracted)) {
-        return float4(pow(reflectedColor.rgb, 0.4545f), 1);
+        return float4(pow(reflectedColor.rgb, 0.4545f), i.pos.z);
     }
 
     const float f = fresnel(viewVec, normal);
 
     const float3 color = lerp(refractedColor, reflectedColor, f).rgb;
 
-    return float4(pow(color, 0.4545f), 1);
+    return float4(pow(color, 0.4545f), i.pos.z);
 }

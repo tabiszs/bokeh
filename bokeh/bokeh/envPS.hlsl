@@ -8,5 +8,5 @@ struct PSInput {
 
 float4 main(const PSInput i) : SV_TARGET {
     const float3 color = pow(envMap.Sample(samp, i.tex).rgb, 0.4545f);
-    return float4(color, 1.0f);
+    return float4(color, i.pos.z);
 }
