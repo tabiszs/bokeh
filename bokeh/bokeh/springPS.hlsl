@@ -48,6 +48,13 @@ float fresnel(const float3 N, const float3 L, const float F0) {
     return F0 + (1 - F0) * pow(1 - dot(N, L), 5);
 }
 
+float zToCoc(const float z) {
+    if (z < 0.5) {
+        return 0.0;
+    }
+    return pow(z, 4);
+}
+
 float4 main(const PSInput i) : SV_TARGET {
     const float3 N1 = normalize(i.norm);
     // const float3 dPdx = ddx(i.worldPos);
@@ -98,6 +105,6 @@ float4 main(const PSInput i) : SV_TARGET {
     }
 
     const float3 finalColor = color + ambient;
-    
-    return float4(pow(finalColor / (finalColor + 1), 1 / 2.2), i.pos.z);
+
+    return float4(pow(finalColor / (finalColor + 1), 1 / 2.2), zToCoc(i.pos.z));
 }

@@ -6,7 +6,14 @@ struct PSInput {
     float3 tex : TEXCOORD0;
 };
 
+float zToCoc(const float z) {
+    if (z < 0.5) {
+        return 0.0;
+    }
+    return pow(z, 4);
+}
+
 float4 main(const PSInput i) : SV_TARGET {
     const float3 color = pow(envMap.Sample(samp, i.tex).rgb, 0.4545f);
-    return float4(color, i.pos.z);
+    return float4(color, zToCoc(i.pos.z));
 }

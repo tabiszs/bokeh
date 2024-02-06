@@ -28,6 +28,13 @@ float fresnel(const float3 viewVec, const float3 normal) {
     return F0 + (1.0 - F0) * pow(1.0 - cosTh, 5.0);
 }
 
+float zToCoc(const float z) {
+    if (z < 0.5) {
+        return 0.0;
+    }
+    return pow(z, 4);
+}
+
 float4 main(const PSInput i) : SV_TARGET {
     const float3 tex = float3(i.localPos.xz * 10.0f, time);
     const float ex = 2 * perlin.Sample(samp, tex).r - 1;
@@ -47,12 +54,12 @@ float4 main(const PSInput i) : SV_TARGET {
     const float4 refractedColor = envMap.Sample(samp, intersect_ray(i.localPos, refracted));
 
     if (!any(refracted)) {
-        return float4(pow(reflectedColor.rgb, 0.4545f), i.pos.z);
+        return float4(pow(reflectedColor.rgb, 0.4545f), pow(i.pos.z, 2));
     }
 
     const float f = fresnel(viewVec, normal);
 
     const float3 color = lerp(refractedColor, reflectedColor, f).rgb;
 
-    return float4(pow(color, 0.4545f), i.pos.z);
+    return float4(pow(color, 0.4545f), zToCoc(i.pos.z));
 }

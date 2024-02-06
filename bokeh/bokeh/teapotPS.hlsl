@@ -16,45 +16,45 @@ SamplerState samp : register(s0);
 float4 lightPos[NLIGHTS];
 float3 lightColor[NLIGHTS];
 
-struct PSInput
-{
-	float4 pos : SV_POSITION;
-	float3 worldPos : POSITION0;
-	float3 norm : NORMAL0;
+struct PSInput {
+    float4 pos : SV_POSITION;
+    float3 worldPos : POSITION0;
+    float3 norm : NORMAL0;
     float3 view : VIEWVEC0;
     float2 tex : TEXCOORD0;
 };
 
-float3 normalMapping(const float3 N, const float3 T, const float3 tn)
-{
+float3 normalMapping(const float3 N, const float3 T, const float3 tn) {
     const float3 B = normalize(cross(normalize(N), T));
-    const float3x3 tbn = { T, B, N };
+    const float3x3 tbn = {T, B, N};
     return normalize(mul(transpose(tbn), tn));
 }
 
-float normalDistributionGGX(const float3 N, const float3 H, const float roughness)
-{
+float normalDistributionGGX(const float3 N, const float3 H, const float roughness) {
     return roughness * roughness / (PI * pow(pow(max(dot(N, H), EPS), 2) * (roughness * roughness - 1) + 1, 2));
 }
 
-float geometrySchlickGGX(const float3 N, const float3 W, const float roughness)
-{
+float geometrySchlickGGX(const float3 N, const float3 W, const float roughness) {
     const float q = pow(roughness + 1, 2) / 8;
     return max(dot(N, W), EPS) / (max(dot(N, W), EPS) * (1 - q) + q);
 }
 
-float geometrySmith(const float3 N, const float3 V, const float3 L, const float roughness)
-{
+float geometrySmith(const float3 N, const float3 V, const float3 L, const float roughness) {
     return geometrySchlickGGX(N, V, roughness) * geometrySchlickGGX(N, L, roughness);
 }
 
-float fresnel(const float3 N, const float3 L, const float F0)
-{
+float fresnel(const float3 N, const float3 L, const float F0) {
     return F0 + (1 - F0) * pow(1 - dot(N, L), 5);
 }
 
-float4 main(const PSInput i) : SV_TARGET
-{
+float zToCoc(const float z) {
+    if (z < 0.5) {
+        return 0.0;
+    }
+    return pow(z, 4);
+}
+
+float4 main(const PSInput i) : SV_TARGET {
     const float3 N1 = normalize(i.norm);
     const float3 dPdx = ddx(i.worldPos);
     const float3 dPdy = ddy(i.worldPos);
@@ -62,8 +62,8 @@ float4 main(const PSInput i) : SV_TARGET
     const float2 dtdy = ddy(i.tex);
     const float3 T = normalize(-dPdx * dtdy.y + dPdy * dtdx.y);
 
-	float3 tn = normTex.Sample(samp, i.tex) * 2 - 1;
-	tn.y *= -1;
+    float3 tn = normTex.Sample(samp, i.tex) * 2 - 1;
+    tn.y *= -1;
 
     const float3 N = normalMapping(N1, T, tn);
     const float3 V = normalize(i.view);
@@ -104,5 +104,5 @@ float4 main(const PSInput i) : SV_TARGET
 
     const float3 finalColor = color + ambient;
     float3 output = pow(finalColor / (finalColor + 1), 1 / 2.2);
-    return float4(output, i.pos.z);
+    return float4(output, zToCoc(i.pos.z));
 }

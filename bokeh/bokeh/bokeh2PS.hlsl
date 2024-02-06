@@ -55,6 +55,10 @@ float4 main(const PSInput i) : SV_TARGET {
 
     float3 output = (color.rgb + color2.rgb) * 0.5f;
 
+    if (coc == 0.0f) {
+        output = sceneTexture.Sample(blurSampler, i.tex).rgb;
+    }
+
     // Expose. Hacked-up for this demo.
     // return float4(1 - exp(-output.rgb / 8), 1.0f);
     return float4(output, 1.0f);
