@@ -14,7 +14,10 @@
 # Compiled Dynamic libraries
 *.so
 *.dylib
-*.dll
+bokeh/*.dll
+mini-common/*.dll
+*.tlog
+*.log
 
 # Fortran module files
 *.mod
@@ -35,3 +38,7 @@
 DirectXUtils.idb
 DirectXUtils.pdb
 DirectXUtils.lib
+/mini-common/DirectXUtils/x64/*
+/mini-common/DirectXUtils/*PS.h
+/mini-common/DirectXUtils/*VS.h
+/mini-common/DirectXUtils/*GS.h

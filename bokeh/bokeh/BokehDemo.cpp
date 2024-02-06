@@ -14,7 +14,7 @@ auto operator/(const SIZE& s, const float f) -> SIZE {
 }
 
 BokehDemo::BokehDemo(HINSTANCE hInst): BokehDemoBase(hInst) {
-    //Shader Variables
+    // Shader Variables
     m_variables.AddSemanticVariable("modelMtx", VariableSemantic::MatM);
     m_variables.AddSemanticVariable("modelInvTMtx", VariableSemantic::MatMInvT);
     m_variables.AddSemanticVariable("viewProjMtx", VariableSemantic::MatVP);
@@ -68,9 +68,34 @@ BokehDemo::BokehDemo(HINSTANCE hInst): BokehDemoBase(hInst) {
     m_variables.AddGuiVariable("lightPos", lightPos, -10, 10);
     m_variables.AddGuiVariable("lightColor", lightColor, 0, 100, 1);
 
+    // variables // BOKEH
+    constexpr float angle = 0.0f;
+    constexpr float coc_factor = 1.0f;
+    constexpr float NUM_SAMPLES = 16.0f;
+    m_variables.AddGuiVariable("NUM_SAMPLES", NUM_SAMPLES, 1, 16, 1);
+    m_variables.AddGuiVariable("coc_factor", coc_factor, 0.8f, 1.2f);
+    m_variables.AddGuiVariable("angle", angle, -XM_PI, XM_PI, 0.1f);
 
-    //Models
+    SIZE screenSize = get_window().client_size();
+    m_variables.AddRenderableTexture(m_device, "sceneTexture", screenSize);
 
+    // Samplers // BOKEH
+    sampler_info sDesc;
+    sDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+    sDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+    sDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+    sDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+    m_variables.AddSampler(m_device, "blurSampler", sDesc);
+
+    m_variables.AddSemanticVariable("nearZ", VariableSemantic::FloatNearPlane);
+    m_variables.AddTexture(m_device, "screenColor",
+        tex2d_info(screenSize.cx, screenSize.cy,
+            DXGI_FORMAT_R8G8B8A8_UNORM, 1));
+    m_variables.AddTexture(m_device, "screenDepth",
+        tex2d_info(screenSize.cx, screenSize.cy,
+            DXGI_FORMAT_R24_UNORM_X8_TYPELESS, 1));
+
+    // Models
     const auto teapot = addModelFromFile("models/Teapot.3ds");
     XMFLOAT4X4 teapotMtx{};
     XMStoreFloat4x4(
@@ -98,20 +123,43 @@ BokehDemo::BokehDemo(HINSTANCE hInst): BokehDemoBase(hInst) {
 
 
     //Render Passes
-
-    const auto passTeapot = addPass(L"teapotVS.cso", L"teapotPS.cso");
+    // teapot
+    const auto passTeapot = addPass(L"teapotVS.cso", L"teapotPS.cso", "sceneTexture");
     addModelToPass(passTeapot, teapot);
 
-    const auto passSpring = addPass(L"springVS.cso", L"springPS.cso");
+    // spring
+    const auto passSpring = addPass(L"springVS.cso", L"springPS.cso", "sceneTexture");
     addModelToPass(passSpring, plane);
 
-    const auto passWater = addPass(L"waterVS.cso", L"waterPS.cso");
+    // water
+    const auto passWater = addPass(L"waterVS.cso", L"waterPS.cso", "sceneTexture");
     addModelToPass(passWater, quad);
     rasterizer_info rs;
     rs.CullMode = D3D11_CULL_NONE;
     addRasterizerState(passWater, rs);
 
-    const auto passEnv = addPass(L"envVS.cso", L"envPS.cso");
+    // cube map
+    const auto passEnv = addPass(L"envVS.cso", L"envPS.cso", "sceneTexture");
     addModelToPass(passEnv, envModel);
     addRasterizerState(passEnv, rasterizer_info(true));
+
+
+    // blur filtering BOKEH
+    // add textures as double render target
+    directx::tex2d_info desc(screenSize.cx, screenSize.cy);
+    desc.BindFlags |= D3D11_BIND_RENDER_TARGET;
+    desc.MipLevels = 1;
+    auto verticalBlurTexture = m_device.CreateTexture(desc);
+    m_variables.AddTexture(m_device, "verticalBlurTexture", verticalBlurTexture);
+    auto diagonalBlurTexture = m_device.CreateTexture(desc);
+    m_variables.AddTexture(m_device, "diagonalBlurTexture", diagonalBlurTexture);
+
+    SIZE s{ static_cast<LONG>(desc.Width), static_cast<LONG>(desc.Height) };
+    auto doubleTextureTarget = RenderTargetsEffect(directx::viewport{ s }, m_device.CreateDepthStencilView(s.cx, s.cy));
+    doubleTextureTarget.SetRenderTargets({ m_device.CreateRenderTargetView(verticalBlurTexture).get(), m_device.CreateRenderTargetView(diagonalBlurTexture).get() });
+
+    auto passBlurBokeh1 = addPass(L"fullScreenQuadVS.cso", L"bokeh1PS.cso", doubleTextureTarget, true);
+    addModelToPass(passBlurBokeh1, quad);
+    auto passBlurBokeh2 = addPass(L"fullScreenQuadVS.cso", L"bokeh2PS.cso", window_target());
+    addModelToPass(passBlurBokeh2, quad);
 }
