@@ -69,9 +69,9 @@ BokehDemo::BokehDemo(HINSTANCE hInst): BokehDemoBase(hInst) {
     m_variables.AddGuiVariable("lightColor", lightColor, 0, 100, 1);
 
     // variables // BOKEH
-    constexpr float angle = 0.0f;
-    constexpr float coc_factor = 1.0f;
-    constexpr float NUM_SAMPLES = 16.0f;
+    constexpr auto angle = 0.0F;
+    constexpr auto coc_factor = 1.0F;
+    constexpr auto NUM_SAMPLES = 16.0F;
     m_variables.AddGuiVariable("NUM_SAMPLES", NUM_SAMPLES, 1, 16, 1);
     m_variables.AddGuiVariable("coc_factor", coc_factor, 0.8f, 1.2f);
     m_variables.AddGuiVariable("angle", angle, -XM_PI, XM_PI, 0.1f);
@@ -89,8 +89,8 @@ BokehDemo::BokehDemo(HINSTANCE hInst): BokehDemoBase(hInst) {
 
     m_variables.AddSemanticVariable("nearZ", VariableSemantic::FloatNearPlane);
     m_variables.AddTexture(m_device, "screenColor",
-        tex2d_info(screenSize.cx, screenSize.cy,
-            DXGI_FORMAT_R8G8B8A8_UNORM, 1));
+                           tex2d_info(screenSize.cx, screenSize.cy,
+                                      DXGI_FORMAT_R8G8B8A8_UNORM, 1));
     m_variables.AddTexture(m_device, "screenDepth",
         tex2d_info(screenSize.cx, screenSize.cy,
             DXGI_FORMAT_R24_UNORM_X8_TYPELESS, 1));

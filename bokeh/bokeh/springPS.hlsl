@@ -83,8 +83,7 @@ float4 main(const PSInput i) : SV_TARGET {
     const float Is = Ii * (F0 * brdf.x + brdf.y);
     const float3 ambient = 0.03 * A + Id + Is;
 
-    for (int l = 0; l < NLIGHTS; l++)
-    {
+    for (int l = 0; l < NLIGHTS; l++) {
         const float3 li = normalize(lightPos[l] - i.worldPos);
         const float3 Li = max(dot(N, li), EPS) * lightColor[l] / pow(length(lightPos[l] - i.worldPos), 2);
         const float3 H = normalize(li + V);
@@ -99,6 +98,6 @@ float4 main(const PSInput i) : SV_TARGET {
     }
 
     const float3 finalColor = color + ambient;
-
-    return pow(float4(finalColor / (finalColor + 1), 1), 1 / 2.2);
+    
+    return float4(pow(finalColor / (finalColor + 1), 1 / 2.2), 1);
 }

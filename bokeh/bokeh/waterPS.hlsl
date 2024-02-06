@@ -6,15 +6,13 @@ Texture3D perlin;
 
 float time;
 
-struct PSInput
-{
+struct PSInput {
     float4 pos : SV_POSITION;
     float3 localPos : POSITION0;
     float3 worldPos : POSITION1;
 };
 
-float3 intersect_ray(float3 p, float3 r)
-{
+float3 intersect_ray(float3 p, float3 r) {
     const float t_x = max((-p.x + 1) / r.x, (-p.x - 1) / r.x);
     const float t_y = max((-p.y + 1) / r.y, (-p.y - 1) / r.y);
     const float t_z = max((-p.z + 1) / r.z, (-p.z - 1) / r.z);
@@ -23,16 +21,14 @@ float3 intersect_ray(float3 p, float3 r)
     return p + r * t;
 }
 
-float fresnel(const float3 viewVec, const float3 normal)
-{
+float fresnel(const float3 viewVec, const float3 normal) {
     const float F0 = 0.14;
     const float cosTh = max(dot(viewVec, normal), 0.0);
 
     return F0 + (1.0 - F0) * pow(1.0 - cosTh, 5.0);
 }
 
-float4 main(const PSInput i) : SV_TARGET
-{
+float4 main(const PSInput i) : SV_TARGET {
     const float3 tex = float3(i.localPos.xz * 10.0f, time);
     const float ex = 2 * perlin.Sample(samp, tex).r - 1;
     const float ez = 2 * perlin.Sample(samp, tex + 0.5).r - 1;
@@ -50,8 +46,7 @@ float4 main(const PSInput i) : SV_TARGET
     const float4 reflectedColor = envMap.Sample(samp, intersect_ray(i.localPos, reflected));
     const float4 refractedColor = envMap.Sample(samp, intersect_ray(i.localPos, refracted));
 
-    if (!any(refracted))
-    {
+    if (!any(refracted)) {
         return float4(pow(reflectedColor.rgb, 0.4545f), 1);
     }
 
