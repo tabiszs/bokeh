@@ -109,5 +109,13 @@
     <FxCompile Include="bokeh2PS.hlsl">
       <Filter>Resource Files\Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="skullPS.hlsl" />
+    <FxCompile Include="skullVS.hlsl" />
+    <FxCompile Include="capsuleVS.hlsl" />
+    <FxCompile Include="capsulePS.hlsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="models\skull.obj" />
+    <None Include="models\capsule.obj" />
   </ItemGroup>
 </Project>
